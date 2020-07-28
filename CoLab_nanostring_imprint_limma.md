@@ -1,18 +1,17 @@
-## R Markdown
+## R Markdown summary
 
 This is an R Markdown document assessing differential gene expression in
 the CoLab Nanostring dataset using the limma R package. This dataset
-consists of 159 genes (92 Imprint, 8 Inflammation, 3 Methylation, 49
-Neuro, 7 Placenta) assessed in 99 samples (19 Preterm control, 24
-Preterm PE, 31 Term control, 25 Term PE). One subject \[1000156\] had
-duplicate entries discrepant for maternal age \> one entry was retained
-and maternal age was recoded as NA for this subject. Based on
-demographic characteristics, preterm subjects varied by gestational age,
-birthweight and race across case status. Term subjects did not vary
-significantly by case status. Race was collapsed to white vs. nonwhite
-(only 1 subject categorized as “Other”).
+focuses on 92 imprinted genes assessed in 99 samples (19 Preterm
+control, 24 Preterm PE, 31 Term control, 25 Term PE). One subject
+\[1000156\] had duplicate entries discrepant for maternal age \> one of
+the two entries was retained and maternal age was recoded as NA for this
+subject. Based on demographic characteristics, preterm subjects varied
+by gestational age, birthweight and race across case status. Term
+subjects did not vary significantly by case status. Race was collapsed
+to white vs. nonwhite (only 1 subject categorized as “Other”).
 
-\#load required libraries
+## Load required libraries
 
 ``` r
 library(tidyverse)
@@ -23,7 +22,7 @@ library(EnhancedVolcano)
 library(ggplot2)
 ```
 
-\#Read in data files
+## Read in data files
 
 ``` r
 totalnorm<-read.csv("NanoString_norm/house_norm_log_filtered.csv",header=T,check.names=F,row.names=1)
@@ -34,7 +33,7 @@ Batch<-read.csv("RawData/NanoString_batch.csv",header=T)
 codeset<-read.csv("../../NHBCS_MKaragas/NanoString/Imprint_codeset.csv",header=T) 
 ```
 
-\#Format datasets
+## Format datasets
 
 ``` r
 totalnorm<-totalnorm[,order(names(totalnorm))]
@@ -67,7 +66,7 @@ Imprint<-as.character(codeset$Gene[codeset$Category%in%c("Allelic Imbalance","Kn
 totalnorm_Imprint<-totalnorm[rownames(totalnorm)%in%Imprint,] #92 genes, 99 subjects
 ```
 
-\#Generate Study table
+## Generate Study table
 
 ``` r
 myVars <- c("Case.status","GestAge","Birthweight","Delivery.method","Infant.sex",     
@@ -201,7 +200,7 @@ tabMat_preterm <- print(tab_preterm,quote = FALSE, noSpaces = FALSE, showAllLeve
 write.csv(tabMat_preterm, file = "Tables/Study_Table_preterm.csv")
 ```
 
-\#Correlation among demographic variables of interest
+## Correlation among demographic variables of interest
 
 ``` r
 #function to reorder cormat
@@ -270,25 +269,18 @@ theme(axis.title.x = element_blank(),
 corr_fig
 ```
 
-    ## Warning: Removed 3 rows containing missing values (geom_text).
-
 ![](CoLab_nanostring_imprint_limma_files/figure-gfm/correlation-1.png)<!-- -->
 
 ``` r
 pdf("Plots/Corr_BW_Gestage.pdf")
 corr_fig
-```
-
-    ## Warning: Removed 3 rows containing missing values (geom_text).
-
-``` r
 dev.off()
 ```
 
     ## png 
     ##   2
 
-\#Overall differential expression of imprinted genes using limma
+## Overall differential expression of imprinted genes using limma
 
 ``` r
 #Using whole dataset for design matrix
@@ -315,88 +307,87 @@ fit2<-contrasts.fit(fit,cont.matrix)
 fit2<-eBayes(fit2)
 
 topTable_preterm<-topTable(fit2,coef="Preterm_PEvsC", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint))
-#MEST FDR = 0.01
-#NDN FDR = 0.04
+topTable_preterm[1:5,]
+```
 
+    ##            logFC   AveExpr         t      P.Value  adj.P.Val          B
+    ## MEST  -0.5504170 11.382586 -3.943622 0.0001518637 0.01397146  0.7141930
+    ## NDN   -0.5493043  9.803632 -3.474330 0.0007677778 0.03531778 -0.7699059
+    ## BMPR2  0.3031994  9.263532  3.120957 0.0023763234 0.07287392 -1.7912071
+    ## IGF2R  0.2797980  8.629422  2.782738 0.0064813638 0.14785076 -2.6847633
+    ## DLX5   0.5875023  9.443525  2.684146 0.0085545511 0.14785076 -2.9289913
+
+``` r
 topTable_term<-topTable(fit2,coef="Term_PEvsC", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint))
-#None
+topTable_term[1:5,]
+```
 
+    ##              logFC  AveExpr         t    P.Value adj.P.Val         B
+    ## ATP10A   0.4278281 5.064315  2.459204 0.01569956 0.7771278 -3.552940
+    ## NEDD9    0.2037434 9.832482  2.202809 0.02998116 0.7771278 -3.810771
+    ## ZC3H12C -0.2264760 5.924460 -1.890447 0.06168938 0.7771278 -4.091807
+    ## PRIM2   -0.1423378 6.333793 -1.861099 0.06576507 0.7771278 -4.116266
+    ## ZFAT    -0.2944615 9.421816 -1.860538 0.06584513 0.7771278 -4.116730
+
+``` r
 #alternative contrasts
 topTable_PCvsTC<-topTable(fit2,coef="PCvsTC", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint))
-#None
+topTable_PCvsTC[1:5,]
+```
 
+    ##                 logFC   AveExpr         t     P.Value adj.P.Val         B
+    ## SLC22A18AS  0.7557290  5.241732  3.126524 0.002335877 0.2149007 -1.537961
+    ## THSD7A     -0.6647568 10.883162 -2.144240 0.034518017 0.7720905 -3.669654
+    ## UBE3A      -0.2611062  8.958013 -2.141346 0.034756902 0.7720905 -3.674907
+    ## SLC22A18    0.5358706  5.627333  2.053041 0.042766506 0.7720905 -3.832094
+    ## MEST        0.3199749 11.382586  1.956580 0.053278391 0.7720905 -3.996925
+
+``` r
 topTable_PPvsTP<-topTable(fit2,coef="PPvsTP", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint))
-#None
+topTable_PPvsTP[1:5,]
+```
 
+    ##                logFC   AveExpr        t    P.Value adj.P.Val         B
+    ## SLC22A18AS 0.7380944  5.241732 2.613475 0.01039315 0.4981296 -4.019260
+    ## PHLDA2     0.4688974  9.267886 2.462599 0.01556060 0.4981296 -4.093239
+    ## BLCAP      0.2914731 10.438665 2.446173 0.01624336 0.4981296 -4.101085
+    ## NNAT       0.6520817  7.220852 2.311198 0.02294329 0.5276957 -4.163967
+    ## CDKN1C     0.4223437 12.362881 2.057618 0.04231538 0.7786030 -4.274140
+
+``` r
 topTable_PPvsTC<-topTable(fit2,coef="PPvsTC", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint))
-#SLC22A18AS; FDR=0.09
+topTable_PPvsTC[1:5,]
+```
 
+    ##                logFC   AveExpr        t      P.Value  adj.P.Val          B
+    ## SLC22A18AS 0.9694698  5.241732 3.401711 0.0009748082 0.08968236 -0.8325639
+    ## LIN28B     0.3231747 10.597006 2.524035 0.0132287334 0.40397746 -3.0837466
+    ## PHLDA2     0.4601187  9.267886 2.394653 0.0185614137 0.40397746 -3.3674639
+    ## NNAT       0.6621242  7.220852 2.325580 0.0221285337 0.40397746 -3.5135443
+    ## CDKN1C     0.4734313 12.362881 2.285664 0.0244551583 0.40397746 -3.5962324
+
+``` r
 topTable_PCvsTP<-topTable(fit2,coef="PCvsTP", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint))
-#None
+topTable_PCvsTP[1:5,]
+```
 
+    ##                 logFC  AveExpr         t    P.Value adj.P.Val         B
+    ## BMPR2      -0.2825202 9.263532 -2.499852 0.01410635  0.569632 -3.934573
+    ## SHANK2     -0.5428438 8.921500 -2.285230 0.02448160  0.569632 -4.063503
+    ## SLC22A18AS  0.5243536 5.241732  2.184979 0.03130383  0.569632 -4.120472
+    ## PRIM2       0.2513232 6.333793  2.170080 0.03244769  0.569632 -4.128757
+    ## SLC22A18    0.5484446 5.627333  2.116399 0.03687598  0.569632 -4.158211
+
+``` r
 write.csv(topTable_preterm,file="limma/imprint_preterm_topTable.csv")
 write.csv(topTable_term,file="limma/imprint_term_topTable.csv")
 write.csv(topTable_PCvsTC,file="limma/imprint_PCvsTC_topTable.csv")
 write.csv(topTable_PPvsTP,file="limma/imprint_PPvsTP_topTable.csv")
 write.csv(topTable_PPvsTC,file="limma/imprint_PPvsTC_topTable.csv")
 write.csv(topTable_PCvsTP,file="limma/imprint_PCvsTP_topTable.csv")
-
-
-#Splitting design matrix into preterm and term subgroups
-Covariates_term<-Covariates%>%
-  filter(grepl("Term",Case.status))%>%
-  mutate(Case.status=factor(Case.status))
-
-totalnorm_Imprint_term<-totalnorm_Imprint%>%
-  select(as.character(Covariates_term$ID))
-all(Covariates_term$ID==names(totalnorm_Imprint_term)) #TRUE
 ```
 
-    ## [1] TRUE
-
-``` r
-Covariates_preterm<-Covariates%>%
-  filter(grepl("Preterm",Case.status))%>%
-  mutate(Case.status=factor(Case.status))
-
-totalnorm_Imprint_preterm<-totalnorm_Imprint%>%
-  select(as.character(Covariates_preterm$ID))
-all(Covariates_preterm$ID==names(totalnorm_Imprint_preterm)) #TRUE
-```
-
-    ## [1] TRUE
-
-``` r
-#PRETERM
-design<-model.matrix(~0+Case.status+GestAge+Race,data=Covariates_preterm)
-colnames(design)<-c("Preterm_control","Preterm_PE","GA","Race")
-
-fit<-lmFit(totalnorm_Imprint_preterm,design)
-
-cont.matrix<-makeContrasts(Preterm_PEvsC=Preterm_PE-Preterm_control,
-                          levels=design)
-
-fit2<-contrasts.fit(fit,cont.matrix)
-fit2<-eBayes(fit2)
-
-topTable_preterm2<-topTable(fit2,coef="Preterm_PEvsC", adjust = "fdr", sort.by="p")
-
-#TERM
-design<-model.matrix(~0+Case.status+GestAge+Race,data=Covariates_term)
-colnames(design)<-c("Term_control","Term_PE","GA","Race")
-
-fit<-lmFit(totalnorm_Imprint_term,design)
-
-cont.matrix<-makeContrasts(Term_PEvsC=Term_PE-Term_control,
-                          levels=design)
-
-fit2<-contrasts.fit(fit,cont.matrix)
-fit2<-eBayes(fit2)
-
-topTable_term2<-topTable(fit2,coef="Term_PEvsC", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint))
-```
-
-\#Sex-stratified differential expression of imprinted genes using limma
+## Sex-stratified differential expression of imprinted genes using limma
 
 ``` r
 #Male placenta
@@ -429,11 +420,29 @@ fit2<-contrasts.fit(fit,cont.matrix)
 fit2<-eBayes(fit2)
 
 topTable_preterm_male<-topTable(fit2,coef="Preterm_PEvsC", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint_male))
-#None
+topTable_preterm_male[1:5,]
+```
 
+    ##              logFC  AveExpr         t    P.Value adj.P.Val         B
+    ## NEDD9    0.4849895 9.815340  2.583279 0.01243016 0.5104777 -4.177278
+    ## GDNF    -0.8805599 5.718944 -2.500232 0.01537180 0.5104777 -4.206468
+    ## ANKRD11  0.3258547 8.360087  2.294786 0.02552297 0.5104777 -4.276028
+    ## PRIM2   -0.3513387 6.293619 -2.218989 0.03056461 0.5104777 -4.300673
+    ## IGF2AS   0.6123903 5.607789  2.210179 0.03120418 0.5104777 -4.303500
+
+``` r
 topTable_term_male<-topTable(fit2,coef="Term_PEvsC", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint_male))
-#None
+topTable_term_male[1:5,]
+```
 
+    ##              logFC  AveExpr         t     P.Value adj.P.Val         B
+    ## CPA4    -0.6255192 5.060867 -3.101289 0.003017846 0.2776419 -1.761317
+    ## INPP5F  -0.2920178 8.861624 -2.482110 0.016092004 0.4607784 -3.034554
+    ## NEDD9    0.2887940 9.815340  2.464307 0.016829074 0.4607784 -3.068066
+    ## GLIS3    0.6688178 5.514400  2.394250 0.020033843 0.4607784 -3.198124
+    ## TRAPPC9 -0.2615059 7.115968 -2.171965 0.034116952 0.6277519 -3.590999
+
+``` r
 write.csv(topTable_preterm_male,file="limma/imprint_preterm__male_topTable.csv")
 write.csv(topTable_term_male,file="limma/imprint_term__male_topTable.csv")
 
@@ -468,17 +477,34 @@ fit2<-contrasts.fit(fit,cont.matrix)
 fit2<-eBayes(fit2)
 
 topTable_preterm_female<-topTable(fit2,coef="Preterm_PEvsC", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint_female))
-#MEST > FDR = 0.08
+topTable_preterm_female[1:5,]
+```
 
+    ##               logFC   AveExpr         t      P.Value  adj.P.Val          B
+    ## MEST     -0.6100752 11.447698 -3.832735 0.0004535646 0.04172795 -0.1263306
+    ## CDKN1C    0.4822958 12.362563  2.668459 0.0110728488 0.36536379 -3.0146698
+    ## COPG2IT1 -0.5743076  6.949162 -2.639149 0.0119140368 0.36536379 -3.0791551
+    ## DLX5      0.6154103  9.448793  2.250716 0.0301611555 0.44103956 -3.8855286
+    ## PLAGL1   -0.4038745 11.175817 -2.230471 0.0315867437 0.44103956 -3.9249534
+
+``` r
 topTable_term_female<-topTable(fit2,coef="Term_PEvsC", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint_female))
-#None
+topTable_term_female[1:5,]
+```
 
+    ##             logFC   AveExpr         t     P.Value adj.P.Val         B
+    ## ATP10A  0.8356459  5.041531  2.822843 0.007478682 0.5113317 -3.824932
+    ## OSBPL5 -0.5794759  4.405425 -2.666909 0.011115907 0.5113317 -3.910708
+    ## NHP2L1  0.1765358 10.779181  2.194320 0.034282232 0.9260226 -4.155538
+    ## ZNF597  0.2226462  7.047702  1.951327 0.058283451 0.9260226 -4.270196
+    ## CPXM2  -1.4498628  6.587447 -1.738868 0.090007970 0.9260226 -4.362779
+
+``` r
 write.csv(topTable_preterm_female,file="limma/imprint_preterm__female_topTable.csv")
 write.csv(topTable_term_female,file="limma/imprint_term__female_topTable.csv")
 ```
 
-\#Differential expression of imprinted genes across sex (among term
-controls)
+## Differential expression of imprinted genes across sex (among term controls)
 
 ``` r
 Covariates_TC<-Covariates%>%
@@ -505,12 +531,21 @@ fit2<-contrasts.fit(fit,cont.matrix)
 fit2<-eBayes(fit2)
 
 topTable_term_sex<-topTable(fit2,coef="Term_FvsM", adjust = "fdr", sort.by="p", n=nrow(totalnorm_Imprint_TC))
-#None
+topTable_term_sex[1:5,]
+```
 
+    ##             logFC   AveExpr         t     P.Value  adj.P.Val         B
+    ## MEG3    0.4297125 12.205188  3.386110 0.001866957 0.08874627 -1.260616
+    ## NNAT    0.5036150  7.100267  3.373880 0.001929267 0.08874627 -1.288624
+    ## CPA4   -0.6433357  5.288394 -2.965995 0.005614633 0.11852971 -2.195467
+    ## OSBPL5  0.5164303  4.490718  2.880396 0.006974669 0.11852971 -2.378216
+    ## LIN28B  0.2413293 10.504105  2.819828 0.008117926 0.11852971 -2.505740
+
+``` r
 write.csv(topTable_term_sex,file="limma/imprint_term_control_sex_topTable.csv")
 ```
 
-\#volcano plot of imprinted DEGs
+## Volcano plot of imprinted DEGs
 
 ``` r
 preterm_volcano<-EnhancedVolcano(topTable_preterm,
@@ -518,7 +553,7 @@ preterm_volcano<-EnhancedVolcano(topTable_preterm,
     x = 'logFC',
     y = 'P.Value',
     title="Preterm Imprint DEGs",
-    pCutoff = 0.0007,
+    pCutoff = 0.001,
     FCcutoff = 0.3,
     pointSize = 1.0,
     labSize = 4.0,
@@ -546,7 +581,7 @@ term_volcano<-EnhancedVolcano(topTable_term,
     x = 'logFC',
     y = 'P.Value',
     title="Term Imprint DEGs",
-    pCutoff = 0.0007,
+    pCutoff = 0.001,
     FCcutoff = 0.3,
     pointSize = 1.0,
     labSize = 4.0,
@@ -574,7 +609,7 @@ control_volcano<-EnhancedVolcano(topTable_PCvsTC,
     x = 'logFC',
     y = 'P.Value',
     title="Imprint DEGs (Preterm vs Term Controls)",
-    pCutoff = 0.0007,
+    pCutoff = 0.001,
     FCcutoff = 0.3,
     pointSize = 1.0,
     labSize = 4.0,
@@ -602,7 +637,7 @@ PCvsTC_volcano<-EnhancedVolcano(topTable_PCvsTP,
     x = 'logFC',
     y = 'P.Value',
     title="Imprint DEGs (Preterm Controls vs Term Cases)",
-    pCutoff = 0.0007,
+    pCutoff = 0.001,
     FCcutoff = 0.3,
     pointSize = 1.0,
     labSize = 4.0,
@@ -630,7 +665,7 @@ PPvsTC<-EnhancedVolcano(topTable_PPvsTC,
     x = 'logFC',
     y = 'P.Value',
     title="Imprint DEGs (Preterm Cases vs Term Controls)",
-    pCutoff = 0.0007,
+    pCutoff = 0.001,
     FCcutoff = 0.3,
     pointSize = 1.0,
     labSize = 4.0,
@@ -658,7 +693,7 @@ PPvsTP<-EnhancedVolcano(topTable_PCvsTC,
     x = 'logFC',
     y = 'P.Value',
     title="Imprint DEGs (Preterm vs Term Cases)",
-    pCutoff = 0.0007,
+    pCutoff = 0.001,
     FCcutoff = 0.3,
     pointSize = 1.0,
     labSize = 4.0,
@@ -685,8 +720,8 @@ Female_term_volcano<-EnhancedVolcano(topTable_term_female,
     lab = rownames(topTable_term_female),
     x = 'logFC',
     y = 'P.Value',
-    title="Imprint DEGs (Female Term Cases vs Female Term Control)",
-    pCutoff = 0.0007,
+    title="Imprint DEGs (Female Term Cases vs Controls)",
+    pCutoff = 0.001,
     FCcutoff = 0.3,
     pointSize = 1.0,
     labSize = 4.0,
@@ -713,8 +748,8 @@ Female_preterm_volcano<-EnhancedVolcano(topTable_preterm_female,
     lab = rownames(topTable_preterm_female),
     x = 'logFC',
     y = 'P.Value',
-    title="Imprint DEGs (Female Preterm Cases vs Female Preterm Control)",
-    pCutoff = 0.0007,
+    title="Imprint DEGs (Female Preterm Cases vs Controls)",
+    pCutoff = 0.001,
     FCcutoff = 0.3,
     pointSize = 1.0,
     labSize = 4.0,
@@ -741,8 +776,8 @@ male_term_volcano<-EnhancedVolcano(topTable_term_male,
     lab = rownames(topTable_term_male),
     x = 'logFC',
     y = 'P.Value',
-    title="Imprint DEGs (Male Term Cases vs Male Term Control)",
-    pCutoff = 0.0007,
+    title="Imprint DEGs (Male Term Cases vs Controls)",
+    pCutoff = 0.001,
     FCcutoff = 0.3,
     pointSize = 1.0,
     labSize = 4.0,
@@ -769,8 +804,8 @@ male_preterm_volcano<-EnhancedVolcano(topTable_preterm_male,
     lab = rownames(topTable_preterm_male),
     x = 'logFC',
     y = 'P.Value',
-    title="Imprint DEGs (Male Preterm Cases vs Male Preterm Control)",
-    pCutoff = 0.0007,
+    title="Imprint DEGs (Male Preterm Cases vs Controls)",
+    pCutoff = 0.001,
     FCcutoff = 0.3,
     pointSize = 1.0,
     labSize = 4.0,
@@ -792,8 +827,7 @@ dev.off()
     ## png 
     ##   2
 
-\#boxplot of most differentially expressed imprinted genes across case
-status (MEST, NDN)
+## Boxplot of most differentially expressed imprinted genes across case status (MEST, NDN)
 
 ``` r
 #Overall
@@ -806,11 +840,7 @@ Boxplots<-Genes%>%
   left_join(Covariates)%>%
   select(ID,MEST,NDN,Case.status)%>%
   gather(Genes,Value,-c(ID,Case.status))
-```
 
-    ## Joining, by = "ID"
-
-``` r
 imprint_boxplot<-ggplot(Boxplots,aes(x=Case.status,y=Value,fill=Case.status))+
   geom_boxplot()+
   theme_bw()+
@@ -854,11 +884,7 @@ DLX5_boxplot<-Genes%>%
         legend.title = element_blank(),
         strip.background=element_rect(fill="white"),
         strip.text=element_text(face="bold"))
-```
 
-    ## Joining, by = "ID"
-
-``` r
 DLX5_boxplot
 ```
 
@@ -884,11 +910,8 @@ Boxplots<-Genes%>%
   left_join(Covariates_female)%>%
   select(ID,MEST,NDN,Case.status)%>%
   gather(Genes,Value,-c(ID,Case.status))
-```
 
-    ## Joining, by = "ID"
 
-``` r
 female_imprint_boxplot<-ggplot(Boxplots,aes(x=Case.status,y=Value,fill=Case.status))+
   geom_boxplot()+
   theme_bw()+
@@ -932,11 +955,8 @@ female_DLX5_boxplot<-Genes%>%
         legend.title = element_blank(),
         strip.background=element_rect(fill="white"),
         strip.text=element_text(face="bold"))
-```
 
-    ## Joining, by = "ID"
 
-``` r
 female_DLX5_boxplot
 ```
 
@@ -962,11 +982,8 @@ Boxplots<-Genes%>%
   left_join(Covariates_male)%>%
   select(ID,MEST,NDN,Case.status)%>%
   gather(Genes,Value,-c(ID,Case.status))
-```
 
-    ## Joining, by = "ID"
 
-``` r
 male_imprint_boxplot<-ggplot(Boxplots,aes(x=Case.status,y=Value,fill=Case.status))+
   geom_boxplot()+
   theme_bw()+
@@ -1010,11 +1027,7 @@ male_DLX5_boxplot<-Genes%>%
         legend.title = element_blank(),
         strip.background=element_rect(fill="white"),
         strip.text=element_text(face="bold"))
-```
 
-    ## Joining, by = "ID"
-
-``` r
 male_DLX5_boxplot
 ```
 
