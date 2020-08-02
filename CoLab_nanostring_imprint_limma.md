@@ -1001,7 +1001,7 @@ Boxplots<-Genes%>%
   mutate(Case.status=ifelse(Case.status=="Term PE","Late onset case",
                             ifelse(Case.status=="Preterm PE","Early onset case",as.character(Case.status))),
          Case.status=factor(Case.status,levels=c("Early onset case","Preterm control","Late onset case","Term control")))%>%
-  drop_na()%>%
+  drop_na()%>% #drop males
   gather(Genes,Value,-c(ID,Case.status))
 
 
@@ -1038,12 +1038,15 @@ male_DLX5_boxplot<-Genes%>%
   mutate(ID=rowname)%>%
   left_join(Covariates_male)%>%
   select(ID,DLX5,Case.status)%>%
-  drop_na()%>% #drop females
+  mutate(Case.status=ifelse(Case.status=="Term PE","Late onset case",
+                            ifelse(Case.status=="Preterm PE","Early onset case",as.character(Case.status))),
+         Case.status=factor(Case.status,levels=c("Early onset case","Preterm control","Late onset case","Term control")))%>%
+  drop_na()%>%
   ggplot(.,aes(x=Case.status,y=DLX5,fill=Case.status))+
   geom_boxplot()+
   theme_bw()+
   labs(y="log2 gene expression")+
-  scale_fill_manual(values=c("grey40","mediumorchid4","grey60","mediumorchid2"))+
+  scale_fill_manual(values=c("mediumorchid4","grey40","mediumorchid2","grey60"))+
   theme(axis.text.x=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_text(face="bold"),
