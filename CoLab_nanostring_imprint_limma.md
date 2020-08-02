@@ -839,12 +839,16 @@ Boxplots<-Genes%>%
   mutate(ID=rowname)%>%
   left_join(Covariates)%>%
   select(ID,MEST,NDN,Case.status)%>%
+  mutate(Case.status=ifelse(Case.status=="Term PE","Late onset case",
+                            ifelse(Case.status=="Preterm PE","Early onset case",as.character(Case.status))),
+         Case.status=factor(Case.status,levels=c("Early onset case","Preterm control","Late onset case","Term control")))%>%
   gather(Genes,Value,-c(ID,Case.status))
 
 imprint_boxplot<-ggplot(Boxplots,aes(x=Case.status,y=Value,fill=Case.status))+
   geom_boxplot()+
   theme_bw()+
   labs(y="log2 gene expression")+
+  scale_fill_manual(values=c("mediumorchid4","grey40","mediumorchid2","grey60"))+
   theme(axis.text.x=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_text(face="bold"),
@@ -874,10 +878,14 @@ DLX5_boxplot<-Genes%>%
   mutate(ID=rowname)%>%
   left_join(Covariates)%>%
   select(ID,DLX5,Case.status)%>%
+  mutate(Case.status=ifelse(Case.status=="Term PE","Late onset case",
+                            ifelse(Case.status=="Preterm PE","Early onset case",as.character(Case.status))),
+         Case.status=factor(Case.status,levels=c("Early onset case","Preterm control","Late onset case","Term control")))%>%
   ggplot(.,aes(x=Case.status,y=DLX5,fill=Case.status))+
   geom_boxplot()+
   theme_bw()+
   labs(y="log2 gene expression")+
+  scale_fill_manual(values=c("mediumorchid4","grey40","mediumorchid2","grey60"))+
   theme(axis.text.x=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_text(face="bold"),
@@ -909,6 +917,10 @@ Boxplots<-Genes%>%
   mutate(ID=rowname)%>%
   left_join(Covariates_female)%>%
   select(ID,MEST,NDN,Case.status)%>%
+  mutate(Case.status=ifelse(Case.status=="Term PE","Late onset case",
+                            ifelse(Case.status=="Preterm PE","Early onset case",as.character(Case.status))),
+         Case.status=factor(Case.status,levels=c("Early onset case","Preterm control","Late onset case","Term control")))%>%
+  drop_na()%>% 
   gather(Genes,Value,-c(ID,Case.status))
 
 
@@ -916,6 +928,7 @@ female_imprint_boxplot<-ggplot(Boxplots,aes(x=Case.status,y=Value,fill=Case.stat
   geom_boxplot()+
   theme_bw()+
   labs(y="log2 gene expression")+
+  scale_fill_manual(values=c("mediumorchid4","grey40","mediumorchid2","grey60"))+
   theme(axis.text.x=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_text(face="bold"),
@@ -944,11 +957,15 @@ female_DLX5_boxplot<-Genes%>%
   mutate(ID=rowname)%>%
   left_join(Covariates_female)%>%
   select(ID,DLX5,Case.status)%>%
+  mutate(Case.status=ifelse(Case.status=="Term PE","Late onset case",
+                            ifelse(Case.status=="Preterm PE","Early onset case",as.character(Case.status))),
+         Case.status=factor(Case.status,levels=c("Early onset case","Preterm control","Late onset case","Term control")))%>%
   drop_na()%>% #drop males
   ggplot(.,aes(x=Case.status,y=DLX5,fill=Case.status))+
   geom_boxplot()+
   theme_bw()+
   labs(y="log2 gene expression")+
+  scale_fill_manual(values=c("mediumorchid4","grey40","mediumorchid2","grey60"))+
   theme(axis.text.x=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_text(face="bold"),
@@ -981,6 +998,10 @@ Boxplots<-Genes%>%
   mutate(ID=rowname)%>%
   left_join(Covariates_male)%>%
   select(ID,MEST,NDN,Case.status)%>%
+  mutate(Case.status=ifelse(Case.status=="Term PE","Late onset case",
+                            ifelse(Case.status=="Preterm PE","Early onset case",as.character(Case.status))),
+         Case.status=factor(Case.status,levels=c("Early onset case","Preterm control","Late onset case","Term control")))%>%
+  drop_na()%>%
   gather(Genes,Value,-c(ID,Case.status))
 
 
@@ -988,6 +1009,7 @@ male_imprint_boxplot<-ggplot(Boxplots,aes(x=Case.status,y=Value,fill=Case.status
   geom_boxplot()+
   theme_bw()+
   labs(y="log2 gene expression")+
+  scale_fill_manual(values=c("mediumorchid4","grey40","mediumorchid2","grey60"))+
   theme(axis.text.x=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_text(face="bold"),
@@ -1021,6 +1043,7 @@ male_DLX5_boxplot<-Genes%>%
   geom_boxplot()+
   theme_bw()+
   labs(y="log2 gene expression")+
+  scale_fill_manual(values=c("grey40","mediumorchid4","grey60","mediumorchid2"))+
   theme(axis.text.x=element_blank(),
         axis.title.x=element_blank(),
         axis.title.y=element_text(face="bold"),
